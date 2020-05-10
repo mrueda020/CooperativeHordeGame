@@ -5,12 +5,14 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-
+#include "GameFramework/PawnMovementComponent.h"
 // Sets default values
 ATPSCharacter::ATPSCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
+
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComponent->SetupAttachment(RootComponent);
 	//We use to rotate the camera in base of the pawn view rotation
@@ -43,6 +45,11 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("Turn", this, &ATPSCharacter::AddControllerYawInput);
+
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ATPSCharacter::BeginCrouch);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ATPSCharacter::EndCrouch);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ATPSCharacter::StopJumping);
 }
 
 void ATPSCharacter::MoveRight(float Value)
@@ -61,4 +68,14 @@ void ATPSCharacter::MoveForward(float Value)
 		// add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
 	}
+}
+
+void ATPSCharacter::BeginCrouch()
+{
+	Crouch();
+}
+
+void ATPSCharacter::EndCrouch()
+{
+	UnCrouch();
 }
