@@ -29,6 +29,27 @@ void ATPSCharacter::Tick(float DeltaTime)
 void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
 
+	PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("Turn", this, &ATPSCharacter::AddControllerYawInput);
 }
 
+void ATPSCharacter::MoveRight(float Value)
+{
+	if (Value != 0.0f)
+	{
+		// add movement in that direction
+		AddMovementInput(GetActorRightVector(), Value);
+	}
+}
+
+void ATPSCharacter::MoveForward(float Value)
+{
+	if (Value != 0.0f)
+	{
+		// add movement in that direction
+		AddMovementInput(GetActorForwardVector(), Value);
+	}
+}
