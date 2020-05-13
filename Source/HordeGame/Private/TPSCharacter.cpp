@@ -42,7 +42,6 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
-
 	PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("Turn", this, &ATPSCharacter::AddControllerYawInput);
 
@@ -50,6 +49,16 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ATPSCharacter::EndCrouch);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ATPSCharacter::StopJumping);
+}
+
+FVector ATPSCharacter::GetPawnViewLocation() const
+{
+	if (CameraComponent)
+	{
+		return CameraComponent->GetComponentLocation();
+	}
+
+	return Super::GetPawnViewLocation();
 }
 
 void ATPSCharacter::MoveRight(float Value)
