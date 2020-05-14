@@ -14,6 +14,7 @@ ATPSWeapon::ATPSWeapon()
 	PrimaryActorTick.bCanEverTick = true;
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
+	WeaponSocketName = "WeaponSocket";
 }
 
 // Called when the game starts or when spawned
@@ -45,13 +46,12 @@ void ATPSWeapon::Fire()
 		{
 			AActor* HitActor = HitResult.GetActor();
 			UGameplayStatics::ApplyPointDamage(HitActor, 20.0f, ShotDirection, HitResult, MyOwner->GetInstigatorController(), this, DamageType);
-		
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodEffect, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
 		}
 		DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
+		UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, RootComponent, WeaponSocketName);
 	}
 
-
-	printf("Que tranza");
 }
 
 // Called every frame
