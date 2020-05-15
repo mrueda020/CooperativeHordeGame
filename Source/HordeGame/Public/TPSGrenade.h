@@ -8,7 +8,7 @@
 
 class UProjectileMovementComponent;
 class USphereComponent;
-
+class UDamageType;
 
 UCLASS()
 class HORDEGAME_API ATPSGrenade : public AActor
@@ -34,6 +34,15 @@ protected:
 	FTimerHandle FuzeTimerHandle;
 
 	float MaxFuzeTime;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float BaseDamage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DamageRadius;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
+	TSubclassOf <UDamageType> DamageType;
 
 	void Explode();
 

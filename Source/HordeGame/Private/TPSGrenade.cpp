@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 ATPSGrenade::ATPSGrenade()
@@ -24,8 +25,9 @@ ATPSGrenade::ATPSGrenade()
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 1.0f;
-
 	MaxFuzeTime = 0.5f;
+	BaseDamage = 100.0f;
+	DamageRadius = 10.0f;
 }
 
 // Called when the game starts or when spawned
@@ -47,7 +49,8 @@ void ATPSGrenade::Explode()
 	UE_LOG(LogTemp, Warning, TEXT("Explosion effect"));
 	TArray <AActor*> IgnoredActors = { this };
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, this->GetActorLocation());
-	UGameplayStatics::ApplyRadialDamage(GetWorld(), 50.0f, GetActorLocation(), 10.0f, nullptr, IgnoredActors,this,this->GetInstigatorController());
+	UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), DamageRadius, DamageType, IgnoredActors,this,this->GetInstigatorController());
+	DrawDebugSphere(GetWorld(), this->GetActorLocation(), DamageRadius, 32, FColor::Black, false, 1.5f);
 	Destroy();
 }
 
