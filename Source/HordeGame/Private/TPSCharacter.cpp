@@ -20,19 +20,29 @@ ATPSCharacter::ATPSCharacter()
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(SpringArmComponent);
+
+	bIsAiming = false;
+	ZoomedFOV = 65.0f;
+	FOVInterpSpeed = 25.0f;
 }
 
 // Called when the game starts or when spawned
 void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	DefaultFOV = CameraComponent->FieldOfView;
 }
 
 // Called every frame
 void ATPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	float TargetFOV = bIsAiming ? ZoomedFOV : DefaultFOV;
+
+	float NewFOV = FMath::FInterpTo(CameraComponent->FieldOfView, TargetFOV, DeltaTime, FOVInterpSpeed);
+
+	CameraComponent->SetFieldOfView(NewFOV);
+
 
 }
 
@@ -49,6 +59,9 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ATPSCharacter::EndCrouch);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ATPSCharacter::StopJumping);
+	PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &ATPSCharacter::BeginZoom);
+	PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ATPSCharacter::EndZoom);
+
 }
 
 FVector ATPSCharacter::GetPawnViewLocation() const
@@ -87,4 +100,14 @@ void ATPSCharacter::BeginCrouch()
 void ATPSCharacter::EndCrouch()
 {
 	UnCrouch();
+}
+
+void ATPSCharacter::BeginZoom()
+{
+	bIsAiming = true;
+}
+
+void ATPSCharacter::EndZoom()
+{
+	bIsAiming = false;
 }
