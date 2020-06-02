@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class ATPSWeapon;
 
 UCLASS()
 class HORDEGAME_API ATPSCharacter : public ACharacter
@@ -34,6 +35,15 @@ protected:
 
 	void EndZoom();
 
+	void Fire();
+
+	ATPSWeapon* CurrentWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	TSubclassOf<ATPSWeapon> InitialWeaponClass;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
+	FName WeaponSocketName;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCameraComponent* CameraComponent;

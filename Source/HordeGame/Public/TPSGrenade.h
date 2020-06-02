@@ -14,8 +14,8 @@ UCLASS()
 class HORDEGAME_API ATPSGrenade : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ATPSGrenade();
 
@@ -23,31 +23,29 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-
 	/** Projectile movement component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
-	UProjectileMovementComponent* ProjectileMovement;
+	UProjectileMovementComponent *ProjectileMovement;
 
 	UPROPERTY(EditDefaultsOnly, Category = "FX")
-	UParticleSystem* ExplosionEffect;
+	UParticleSystem *ExplosionEffect;
 
 	FTimerHandle FuzeTimerHandle;
 
 	float MaxFuzeTime;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	float BaseDamage;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	float DamageRadius;
-	
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
-	TSubclassOf <UDamageType> DamageType;
+	TSubclassOf<UDamageType> DamageType;
 
 	void Explode();
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 };

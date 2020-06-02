@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "TPSGrenade.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,9 +12,9 @@
 // Sets default values
 ATPSGrenade::ATPSGrenade()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->InitialSpeed = 3000.f;
@@ -23,7 +22,7 @@ ATPSGrenade::ATPSGrenade()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = true;
 
-	// Die after 3 seconds by default
+	// Die after 1 seconds by default
 	InitialLifeSpan = 1.0f;
 	MaxFuzeTime = 0.5f;
 	BaseDamage = 100.0f;
@@ -34,11 +33,12 @@ ATPSGrenade::ATPSGrenade()
 void ATPSGrenade::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	if (ExplosionEffect) {
-		GetWorld()->GetTimerManager().SetTimer(FuzeTimerHandle, this, &ATPSGrenade::Explode, MaxFuzeTime);	
+
+	if (ExplosionEffect)
+	{
+		GetWorld()->GetTimerManager().SetTimer(FuzeTimerHandle, this, &ATPSGrenade::Explode, MaxFuzeTime);
 	}
-	else 
+	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("It should explode"))
 	}
@@ -47,9 +47,9 @@ void ATPSGrenade::BeginPlay()
 void ATPSGrenade::Explode()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Explosion effect"));
-	TArray <AActor*> IgnoredActors = { this };
+	TArray<AActor *> IgnoredActors = {this};
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, this->GetActorLocation());
-	UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), DamageRadius, DamageType, IgnoredActors,this,this->GetInstigatorController());
+	UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), DamageRadius, DamageType, IgnoredActors, this, this->GetInstigatorController());
 	DrawDebugSphere(GetWorld(), this->GetActorLocation(), DamageRadius, 32, FColor::Black, false, 1.5f);
 	Destroy();
 }
@@ -58,6 +58,4 @@ void ATPSGrenade::Explode()
 void ATPSGrenade::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
-

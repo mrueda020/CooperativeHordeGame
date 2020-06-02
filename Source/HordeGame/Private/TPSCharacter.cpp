@@ -1,15 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "TPSCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "TPSWeapon.h"
+#include "Engine/World.h"
 // Sets default values
 ATPSCharacter::ATPSCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
@@ -24,6 +25,8 @@ ATPSCharacter::ATPSCharacter()
 	bIsAiming = false;
 	ZoomedFOV = 65.0f;
 	FOVInterpSpeed = 25.0f;
+
+	WeaponSocketName = "Weapon Socket";
 }
 
 // Called when the game starts or when spawned
@@ -31,6 +34,15 @@ void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	DefaultFOV = CameraComponent->FieldOfView;
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	CurrentWeapon = GetWorld()->SpawnActor<ATPSWeapon>(InitialWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->AttachToComponent(Cast<USceneComponent>(GetMesh()), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+	}
 }
 
 // Called every frame
@@ -42,26 +54,28 @@ void ATPSCharacter::Tick(float DeltaTime)
 	float NewFOV = FMath::FInterpTo(CameraComponent->FieldOfView, TargetFOV, DeltaTime, FOVInterpSpeed);
 
 	CameraComponent->SetFieldOfView(NewFOV);
-
-
 }
 
 // Called to bind functionality to input
-void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ATPSCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
+
 	PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("Turn", this, &ATPSCharacter::AddControllerYawInput);
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ATPSCharacter::BeginCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ATPSCharacter::EndCrouch);
+
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ATPSCharacter::StopJumping);
+
 	PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &ATPSCharacter::BeginZoom);
 	PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ATPSCharacter::EndZoom);
 
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATPSCharacter::Fire);
 }
 
 FVector ATPSCharacter::GetPawnViewLocation() const
@@ -110,4 +124,12 @@ void ATPSCharacter::BeginZoom()
 void ATPSCharacter::EndZoom()
 {
 	bIsAiming = false;
+}
+
+void ATPSCharacter::Fire()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->Fire();
+	}
 }
