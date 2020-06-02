@@ -8,6 +8,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Camera/CameraShake.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "HordeGame/HordeGame.h"
 
 // Sets default values
 ATPSWeapon::ATPSWeapon()
@@ -34,6 +36,7 @@ void ATPSWeapon::Fire()
 		FCollisionQueryParams QueryParams;
 		TArray<AActor *> IgnoredActors = {MyOwner, this};
 		QueryParams.AddIgnoredActors(IgnoredActors);
+		QueryParams.bReturnPhysicalMaterial = true;
 		//Whether we should trace against complex collision
 		QueryParams.bTraceComplex = true;
 		FHitResult HitResult;
@@ -42,7 +45,26 @@ void ATPSWeapon::Fire()
 			TracerEndPoint = HitResult.ImpactPoint;
 			AActor *HitActor = HitResult.GetActor();
 			UGameplayStatics::ApplyPointDamage(HitActor, 20.0f, ShotDirection, HitResult, MyOwner->GetInstigatorController(), this, DamageType);
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodEffect, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
+
+			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
+			UParticleSystem* SelectedEffect = nullptr;
+			switch (SurfaceType)
+			{
+			case SURFACE_FLESHDEFAULT:
+			case SURFACE_FLESHVULNERABLE:
+				SelectedEffect = FleshImpactEffect;
+				break;
+			
+			default:
+				SelectedEffect = DefaultImpactEffect;
+				break;
+			}
+
+			if (SelectedEffect)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
+			}
+			
 		}
 		//DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
 		PlayFireEffects(TracerEndPoint);
