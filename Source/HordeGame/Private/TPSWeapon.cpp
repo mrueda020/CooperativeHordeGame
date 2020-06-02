@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Camera/CameraShake.h"
 
 // Sets default values
 ATPSWeapon::ATPSWeapon()
@@ -62,6 +63,19 @@ void ATPSWeapon::PlayFireEffects(FVector TracerEndPoint)
 		if (TracerComponent)
 		{
 			TracerComponent->SetVectorParameter(TracerName, TracerEndPoint);
+		}
+
+		if (FireCameraShake)
+		{
+			APawn* MyOwner = Cast<APawn>(GetOwner());
+			if (MyOwner)
+			{
+				APlayerController* PC = Cast<APlayerController>(MyOwner->GetController());
+				if (PC)
+				{
+					PC->ClientPlayCameraShake(FireCameraShake);
+				}
+			}
 		}
 	}
 }

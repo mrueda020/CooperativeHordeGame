@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 
+
 void ATPSGrenadeLauncher::Fire()
 {
 	auto *MyOwner = GetOwner();
@@ -23,16 +24,6 @@ void ATPSGrenadeLauncher::Fire()
 		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
 		GetWorld()->SpawnActor<ATPSGrenade>(ProjectileClass, MuzzleLocation, EyeRotator, ActorSpawnParams);
 
-		UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, RootComponent, MuzzleSocketName);
-
-		if (TracerEffect)
-		{
-			//FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
-			UParticleSystemComponent *TracerComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, MuzzleLocation);
-			if (TracerComponent)
-			{
-				TracerComponent->SetVectorParameter(TracerName, TracerEndPoint);
-			}
-		}
+		PlayFireEffects(TracerEndPoint);
 	}
 }
