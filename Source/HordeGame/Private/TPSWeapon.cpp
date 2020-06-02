@@ -18,6 +18,8 @@ ATPSWeapon::ATPSWeapon()
 	RootComponent = Cast<USceneComponent>(MeshComp);
 	MuzzleSocketName = "MuzzleSocket";
 	TracerName = "BeamEnd";
+	BaseDamage = 20.0f;
+
 }
 
 void ATPSWeapon::Fire()
@@ -40,25 +42,31 @@ void ATPSWeapon::Fire()
 		//Whether we should trace against complex collision
 		QueryParams.bTraceComplex = true;
 		FHitResult HitResult;
-		if (GetWorld()->LineTraceSingleByChannel(HitResult, EyeLocation, TraceEnd, ECC_Visibility, QueryParams))
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 		{
 			TracerEndPoint = HitResult.ImpactPoint;
 			AActor *HitActor = HitResult.GetActor();
-			UGameplayStatics::ApplyPointDamage(HitActor, 20.0f, ShotDirection, HitResult, MyOwner->GetInstigatorController(), this, DamageType);
+			
 
 			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
 			UParticleSystem* SelectedEffect = nullptr;
+			float ActualDamage = BaseDamage;
 			switch (SurfaceType)
 			{
 			case SURFACE_FLESHDEFAULT:
+				SelectedEffect = FleshImpactEffect;
+				break;
+
 			case SURFACE_FLESHVULNERABLE:
 				SelectedEffect = FleshImpactEffect;
+				ActualDamage *= 4.0f;
 				break;
 			
 			default:
 				SelectedEffect = DefaultImpactEffect;
 				break;
 			}
+			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, HitResult, MyOwner->GetInstigatorController(), this, DamageType);
 
 			if (SelectedEffect)
 			{
