@@ -10,6 +10,7 @@
 #include "Camera/CameraShake.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "HordeGame/HordeGame.h"
+#include "TimerManager.h"
 
 // Sets default values
 ATPSWeapon::ATPSWeapon()
@@ -20,6 +21,13 @@ ATPSWeapon::ATPSWeapon()
 	TracerName = "BeamEnd";
 	BaseDamage = 20.0f;
 
+	RateofFire = 500;
+}
+
+void ATPSWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+	TimeBetweenShots = 60 / RateofFire;
 }
 
 void ATPSWeapon::Fire()
@@ -76,7 +84,20 @@ void ATPSWeapon::Fire()
 		}
 		//DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
 		PlayFireEffects(TracerEndPoint);
+
+		LastTimeFire = GetWorld()->GetTimeSeconds();
 	}
+}
+
+void ATPSWeapon::StartFire()
+{	
+	float DelayBetweenShots = FMath::Max(LastTimeFire + TimeBetweenShots - GetWorld()->GetTimeSeconds(),0.0f);
+	GetWorld()->GetTimerManager().SetTimer(FireRateHandle, this, &ATPSWeapon::Fire,TimeBetweenShots , true, DelayBetweenShots);
+}
+
+void ATPSWeapon::EndFire()
+{
+	GetWorld()->GetTimerManager().ClearTimer(FireRateHandle);
 }
 
 void ATPSWeapon::PlayFireEffects(FVector TracerEndPoint)

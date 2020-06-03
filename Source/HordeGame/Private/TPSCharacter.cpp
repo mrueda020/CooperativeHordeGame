@@ -6,7 +6,11 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "TPSWeapon.h"
+#include "TPSGrenadeLauncher.h"
 #include "Engine/World.h"
+#include <typeinfo>
+#include <string.h>
+
 // Sets default values
 ATPSCharacter::ATPSCharacter()
 {
@@ -75,7 +79,8 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCompon
 	PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &ATPSCharacter::BeginZoom);
 	PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ATPSCharacter::EndZoom);
 
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATPSCharacter::Fire);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATPSCharacter::StartFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ATPSCharacter::EndFire);
 }
 
 FVector ATPSCharacter::GetPawnViewLocation() const
@@ -126,10 +131,26 @@ void ATPSCharacter::EndZoom()
 	bIsAiming = false;
 }
 
-void ATPSCharacter::Fire()
+void ATPSCharacter::StartFire()
 {
 	if (CurrentWeapon)
 	{
-		CurrentWeapon->Fire();
+		if (CurrentWeapon->GetClass()->GetName().Compare("BP_Rifle_C")==0)
+		{	
+			CurrentWeapon->StartFire();
+		}
+		else if(CurrentWeapon->GetClass()->GetName().Compare("BP_GrenadeLaucher_C")==0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("It works %s"), *CurrentWeapon->GetClass()->GetName());
+			CurrentWeapon->Fire();
+		}
+	}
+}
+
+void ATPSCharacter::EndFire()
+{
+	if (CurrentWeapon->GetClass()->GetName().Compare("BP_Rifle_C")==0)
+	{
+		CurrentWeapon->EndFire();
 	}
 }
