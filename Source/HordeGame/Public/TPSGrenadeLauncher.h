@@ -20,6 +20,10 @@ protected:
 
     virtual void Fire() override;
 
+    virtual void StartFire() override;
+
+    virtual void EndFire() override;
+
     /** Projectile class to spawn */
     UPROPERTY(EditDefaultsOnly, Category = "Projectile")
     TSubclassOf<ATPSGrenade> ProjectileClass;

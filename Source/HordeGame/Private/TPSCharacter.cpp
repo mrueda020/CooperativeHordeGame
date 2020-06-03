@@ -135,21 +135,13 @@ void ATPSCharacter::StartFire()
 {
 	if (CurrentWeapon)
 	{
-		if (CurrentWeapon->GetClass()->GetName().Compare("BP_Rifle_C")==0)
-		{	
-			CurrentWeapon->StartFire();
-		}
-		else if(CurrentWeapon->GetClass()->GetName().Compare("BP_GrenadeLaucher_C")==0)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("It works %s"), *CurrentWeapon->GetClass()->GetName());
-			CurrentWeapon->Fire();
-		}
+		CurrentWeapon->StartFire();
 	}
 }
 
 void ATPSCharacter::EndFire()
 {
-	if (CurrentWeapon->GetClass()->GetName().Compare("BP_Rifle_C")==0)
+	if (CurrentWeapon)
 	{
 		CurrentWeapon->EndFire();
 	}

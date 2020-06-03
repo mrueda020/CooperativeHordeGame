@@ -27,3 +27,13 @@ void ATPSGrenadeLauncher::Fire()
 		PlayFireEffects(TracerEndPoint);
 	}
 }
+
+void ATPSGrenadeLauncher::StartFire()
+{
+	Fire();
+}
+
+void ATPSGrenadeLauncher::EndFire()
+{
+
+}

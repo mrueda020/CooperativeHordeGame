@@ -64,11 +64,11 @@ protected:
 
 	void PlayFireEffects(FVector TracerEndPoint);
 
-public:
-
 	virtual void Fire();
 
-	void StartFire();
+public:
 
-	void EndFire();
+	virtual void StartFire();
+
+	virtual void EndFire();
 };
