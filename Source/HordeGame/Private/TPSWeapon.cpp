@@ -54,10 +54,9 @@ void ATPSWeapon::Fire()
 		{
 			TracerEndPoint = HitResult.ImpactPoint;
 			AActor *HitActor = HitResult.GetActor();
-			
 
 			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
-			UParticleSystem* SelectedEffect = nullptr;
+			UParticleSystem *SelectedEffect = nullptr;
 			float ActualDamage = BaseDamage;
 			switch (SurfaceType)
 			{
@@ -69,7 +68,7 @@ void ATPSWeapon::Fire()
 				SelectedEffect = FleshImpactEffect;
 				ActualDamage *= 4.0f;
 				break;
-			
+
 			default:
 				SelectedEffect = DefaultImpactEffect;
 				break;
@@ -80,7 +79,6 @@ void ATPSWeapon::Fire()
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
 			}
-			
 		}
 		//DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
 		PlayFireEffects(TracerEndPoint);
@@ -90,9 +88,9 @@ void ATPSWeapon::Fire()
 }
 
 void ATPSWeapon::StartFire()
-{	
-	float DelayBetweenShots = FMath::Max(LastTimeFire + TimeBetweenShots - GetWorld()->GetTimeSeconds(),0.0f);
-	GetWorld()->GetTimerManager().SetTimer(FireRateHandle, this, &ATPSWeapon::Fire,TimeBetweenShots , true, DelayBetweenShots);
+{
+	float DelayBetweenShots = FMath::Max(LastTimeFire + TimeBetweenShots - GetWorld()->GetTimeSeconds(), 0.0f);
+	GetWorld()->GetTimerManager().SetTimer(FireRateHandle, this, &ATPSWeapon::Fire, TimeBetweenShots, true, DelayBetweenShots);
 }
 
 void ATPSWeapon::EndFire()
@@ -118,10 +116,10 @@ void ATPSWeapon::PlayFireEffects(FVector TracerEndPoint)
 
 		if (FireCameraShake)
 		{
-			APawn* MyOwner = Cast<APawn>(GetOwner());
+			APawn *MyOwner = Cast<APawn>(GetOwner());
 			if (MyOwner)
 			{
-				APlayerController* PC = Cast<APlayerController>(MyOwner->GetController());
+				APlayerController *PC = Cast<APlayerController>(MyOwner->GetController());
 				if (PC)
 				{
 					PC->ClientPlayCameraShake(FireCameraShake);

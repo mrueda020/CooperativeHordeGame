@@ -8,8 +8,8 @@
 #include "TPSWeapon.h"
 #include "TPSGrenadeLauncher.h"
 #include "Engine/World.h"
-#include <typeinfo>
-#include <string.h>
+#include "Components/CapsuleComponent.h"
+#include "HordeGame/HordeGame.h"
 
 // Sets default values
 ATPSCharacter::ATPSCharacter()
@@ -17,6 +17,8 @@ ATPSCharacter::ATPSCharacter()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComponent->SetupAttachment(RootComponent);
