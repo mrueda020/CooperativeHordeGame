@@ -9,7 +9,7 @@
 class UCameraComponent;
 class USpringArmComponent;
 class ATPSWeapon;
-
+class UTPSHealthComponent;
 UCLASS()
 class HORDEGAME_API ATPSCharacter : public ACharacter
 {
@@ -39,7 +39,7 @@ protected:
 
 	void EndFire();
 
-	ATPSWeapon* CurrentWeapon;
+	ATPSWeapon *CurrentWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<ATPSWeapon> InitialWeaponClass;
@@ -48,10 +48,10 @@ protected:
 	FName WeaponSocketName;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCameraComponent* CameraComponent;
+	UCameraComponent *CameraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USpringArmComponent* SpringArmComponent;
+	USpringArmComponent *SpringArmComponent;
 
 	bool bIsAiming;
 
@@ -60,16 +60,23 @@ protected:
 
 	float DefaultFOV;
 
-
 	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100.0f))
 	float FOVInterpSpeed;
 
-public:	
+	UTPSHealthComponent *HealthComponent;
+
+	UFUNCTION()
+	void OnHealtChanged(UTPSHealthComponent *HealtComp, float Health, float HealthDelta, const class UDamageType *DamageType, class AController *InstigatedBy, AActor *DamageCauser);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	bool bisDeath;
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
 };

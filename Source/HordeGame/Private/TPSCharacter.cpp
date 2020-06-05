@@ -10,6 +10,7 @@
 #include "Engine/World.h"
 #include "Components/CapsuleComponent.h"
 #include "HordeGame/HordeGame.h"
+#include "HordeGame/Public/Components/TPSHealthComponent.h"
 
 // Sets default values
 ATPSCharacter::ATPSCharacter()
@@ -19,6 +20,8 @@ ATPSCharacter::ATPSCharacter()
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
+
+	HealthComponent = CreateDefaultSubobject<UTPSHealthComponent>(TEXT("HealthComponent"));
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComponent->SetupAttachment(RootComponent);
@@ -48,6 +51,21 @@ void ATPSCharacter::BeginPlay()
 	{
 		CurrentWeapon->SetOwner(this);
 		CurrentWeapon->AttachToComponent(Cast<USceneComponent>(GetMesh()), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+	}
+
+	HealthComponent->OnHealthChanged.AddDynamic(this, &ATPSCharacter::OnHealtChanged);
+}
+
+void ATPSCharacter::OnHealtChanged(UTPSHealthComponent *HealtComp, float Health, float HealthDelta, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser)
+{
+	if (Health <= 0 && !bisDeath)
+	{
+		bisDeath = true;
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		DetachFromControllerPendingDestroy();
+		SetLifeSpan(10.0f);
 	}
 }
 
