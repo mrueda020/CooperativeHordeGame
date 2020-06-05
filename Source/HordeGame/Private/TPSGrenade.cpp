@@ -8,6 +8,7 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
+#include "HordeGame/HordeGame.h"
 
 // Sets default values
 ATPSGrenade::ATPSGrenade()
@@ -49,7 +50,7 @@ void ATPSGrenade::Explode()
 	UE_LOG(LogTemp, Warning, TEXT("Explosion effect"));
 	TArray<AActor *> IgnoredActors = {this};
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, this->GetActorLocation());
-	UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), DamageRadius, DamageType, IgnoredActors, this, this->GetInstigatorController());
+	UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), DamageRadius, DamageType, IgnoredActors, this, this->GetInstigatorController(),false, COLLISION_WEAPON);
 	DrawDebugSphere(GetWorld(), this->GetActorLocation(), DamageRadius, 32, FColor::Black, false, 1.5f);
 	Destroy();
 }
