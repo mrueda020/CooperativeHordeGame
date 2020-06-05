@@ -11,7 +11,8 @@
 #include "Components/CapsuleComponent.h"
 #include "HordeGame/HordeGame.h"
 #include "HordeGame/Public/Components/TPSHealthComponent.h"
-
+#include "Math/UnrealMathUtility.h"
+#include <time.h>
 // Sets default values
 ATPSCharacter::ATPSCharacter()
 {
@@ -42,6 +43,9 @@ ATPSCharacter::ATPSCharacter()
 void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	srand(time(NULL));
+
 	DefaultFOV = CameraComponent->FieldOfView;
 
 	FActorSpawnParameters SpawnParameters;
@@ -60,12 +64,14 @@ void ATPSCharacter::OnHealtChanged(UTPSHealthComponent *HealtComp, float Health,
 {
 	if (Health <= 0 && !bisDeath)
 	{
+		DeathPoseIndex = rand()% DeathAnimPoses;
+		UE_LOG(LogTemp, Warning, TEXT("DeathPose index %d"), DeathPoseIndex);
 		bisDeath = true;
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
-		SetLifeSpan(10.0f);
+		SetLifeSpan(3.0f);
 	}
 }
 
