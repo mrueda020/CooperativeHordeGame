@@ -60,7 +60,7 @@ void ATPSCharacter::BeginPlay()
 	HealthComponent->OnHealthChanged.AddDynamic(this, &ATPSCharacter::OnHealtChanged);
 }
 
-void ATPSCharacter::OnHealtChanged(UTPSHealthComponent *HealtComp, float Health, float HealthDelta, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser)
+void ATPSCharacter::OnHealtChanged(UTPSHealthComponent *OwningHealtComp, float Health, float HealthDelta, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser)
 {
 	if (Health <= 0 && !bisDeath)
 	{

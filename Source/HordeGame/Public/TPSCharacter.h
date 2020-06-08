@@ -63,10 +63,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100.0f))
 	float FOVInterpSpeed;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UTPSHealthComponent *HealthComponent;
 
 	UFUNCTION()
-	void OnHealtChanged(UTPSHealthComponent *HealtComp, float Health, float HealthDelta, const class UDamageType *DamageType, class AController *InstigatedBy, AActor *DamageCauser);
+	void OnHealtChanged(UTPSHealthComponent *OwningHealtComp, float Health, float HealthDelta, const class UDamageType *DamageType, class AController *InstigatedBy, AActor *DamageCauser);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Player")
 	bool bisDeath;
