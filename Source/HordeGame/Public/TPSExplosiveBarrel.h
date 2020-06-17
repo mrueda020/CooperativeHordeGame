@@ -47,7 +47,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	float ExplosionImpulse;
 
-public:	
-	
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float BaseDamage;
+
 
 };

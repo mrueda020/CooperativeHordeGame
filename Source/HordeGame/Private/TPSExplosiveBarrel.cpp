@@ -8,12 +8,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "HordeGame/HordeGame.h"
 #include "PhysicsEngine/RadialForceComponent.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 ATPSExplosiveBarrel::ATPSExplosiveBarrel()
 {
 	ExplosionRadius = 20.0f;
 	ExplosionImpulse = 10.0f;
+	BaseDamage = 150.0f;
 
 	HealtComponent = CreateDefaultSubobject<UTPSHealthComponent>(TEXT("Health Component"));
 	HealtComponent->OnHealthChanged.AddDynamic(this, &ATPSExplosiveBarrel::OnHealtChanged);
@@ -36,12 +38,14 @@ void ATPSExplosiveBarrel::OnHealtChanged(UTPSHealthComponent* OwningHealtComp, f
 {
 	if (Health <= 0 && !bhasExploded)
 	{
+		TArray <AActor*> IgnoredActors= {this};
 		bhasExploded = true;
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
 		FVector UpwardVector = FVector::UpVector * ExplosionImpulse;
 		MeshComp->AddImpulse(UpwardVector,NAME_None,true);
 		RadialForceComponent->FireImpulse();
-
+		UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, this->GetInstigatorController(), false, COLLISION_WEAPON);
+		DrawDebugSphere(GetWorld(), this->GetActorLocation(), ExplosionRadius, 32, FColor::Red, false, 1.5f);
 	}
 }
 
