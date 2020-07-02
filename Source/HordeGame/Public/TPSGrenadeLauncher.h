@@ -19,11 +19,16 @@ class HORDEGAME_API ATPSGrenadeLauncher : public ATPSWeapon
 protected:
 
     virtual void Fire() override;
-	
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void ServerFireGrenade();
+ 
+
 	/** Projectile class to spawn */
     UPROPERTY(EditDefaultsOnly, Category = "Projectile")
     TSubclassOf<ATPSGrenade> ProjectileClass;
 	
+     
 public:
 
     virtual void StartFire() override;

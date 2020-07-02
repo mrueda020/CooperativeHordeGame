@@ -8,7 +8,12 @@
 
 
 void ATPSGrenadeLauncher::Fire()
-{
+{	
+	if (!HasAuthority())
+	{
+		ServerFireGrenade();
+	
+	}
 	auto *MyOwner = GetOwner();
 	if (MyOwner && ProjectileClass)
 	{
@@ -28,6 +33,14 @@ void ATPSGrenadeLauncher::Fire()
 	}
 }
 
+void ATPSGrenadeLauncher::ServerFireGrenade_Implementation()
+{
+	Fire();
+}
+bool ATPSGrenadeLauncher::ServerFireGrenade_Validate()
+{
+	return true;
+}
 void ATPSGrenadeLauncher::StartFire()
 {
 	Fire();
@@ -35,5 +48,6 @@ void ATPSGrenadeLauncher::StartFire()
 
 void ATPSGrenadeLauncher::EndFire()
 {
-
+	
 }
+

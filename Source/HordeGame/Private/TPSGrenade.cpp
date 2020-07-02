@@ -28,6 +28,8 @@ ATPSGrenade::ATPSGrenade()
 	MaxFuzeTime = 0.5f;
 	BaseDamage = 100.0f;
 	DamageRadius = 10.0f;
+
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
