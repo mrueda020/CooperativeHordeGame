@@ -10,17 +10,28 @@ class USkeletalMeshComponent;
 class UDamageType;
 class UCameraShake;
 
+USTRUCT()
+struct FHitScanTrace
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
+
+	UPROPERTY()
+	FVector_NetQuantize TraceTo;
+};
+
 UCLASS()
 class HORDEGAME_API ATPSWeapon : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ATPSWeapon();
 
 protected:
-
 	virtual void BeginPlay() override;
 
 	FTimerHandle FireRateHandle;
@@ -33,25 +44,27 @@ protected:
 	float TimeBetweenShots;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USkeletalMeshComponent* MeshComp;
+	USkeletalMeshComponent *MeshComp;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	TSubclassOf <UDamageType> DamageType;
+	TSubclassOf<UDamageType> DamageType;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	UParticleSystem* MuzzleEffect;
+	UParticleSystem *MuzzleEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	UParticleSystem* DefaultImpactEffect;
+	UParticleSystem *DefaultImpactEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	UParticleSystem* FleshImpactEffect;
+	UParticleSystem *FleshImpactEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	UParticleSystem* TracerEffect;
+	UParticleSystem *TracerEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float BaseDamage;
+
+	float ActualDamage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<UCameraShake> FireCameraShake;
@@ -64,10 +77,20 @@ protected:
 
 	void PlayFireEffects(FVector TracerEndPoint);
 
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint);
+
 	virtual void Fire();
 
-public:
+	UFUNCTION(Server, Reliable, WithValidation)
+	virtual void ServerFire();
 
+	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
+	FHitScanTrace HitScanTracer;
+
+	UFUNCTION()
+	void OnRep_HitScanTrace();
+
+public:
 	virtual void StartFire();
 
 	virtual void EndFire();

@@ -13,6 +13,7 @@
 #include "HordeGame/Public/Components/TPSHealthComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include <time.h>
+#include "Net/UnrealNetwork.h"
 // Sets default values
 ATPSCharacter::ATPSCharacter()
 {
@@ -47,24 +48,26 @@ void ATPSCharacter::BeginPlay()
 	srand(time(NULL));
 
 	DefaultFOV = CameraComponent->FieldOfView;
-
-	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	CurrentWeapon = GetWorld()->SpawnActor<ATPSWeapon>(InitialWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->AttachToComponent(Cast<USceneComponent>(GetMesh()), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
-	}
-
 	HealthComponent->OnHealthChanged.AddDynamic(this, &ATPSCharacter::OnHealtChanged);
+
+	if (HasAuthority())
+	{
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		CurrentWeapon = GetWorld()->SpawnActor<ATPSWeapon>(InitialWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->AttachToComponent(Cast<USceneComponent>(GetMesh()), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+		}
+	}
 }
 
 void ATPSCharacter::OnHealtChanged(UTPSHealthComponent *OwningHealtComp, float Health, float HealthDelta, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser)
 {
 	if (Health <= 0 && !bisDeath)
 	{
-		DeathPoseIndex = rand()% DeathAnimPoses;
+		DeathPoseIndex = rand() % DeathAnimPoses;
 		UE_LOG(LogTemp, Warning, TEXT("DeathPose index %d"), DeathPoseIndex);
 		bisDeath = true;
 		GetMovementComponent()->StopMovementImmediately();
@@ -171,4 +174,13 @@ void ATPSCharacter::EndFire()
 	{
 		CurrentWeapon->EndFire();
 	}
+}
+
+void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATPSCharacter, CurrentWeapon);
+	DOREPLIFETIME(ATPSCharacter, DeathPoseIndex);
+	DOREPLIFETIME(ATPSCharacter, bisDeath);
 }

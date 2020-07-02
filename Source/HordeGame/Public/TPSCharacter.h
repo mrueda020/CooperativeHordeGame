@@ -39,6 +39,7 @@ protected:
 
 	void EndFire();
 
+	UPROPERTY(Replicated)
 	ATPSWeapon *CurrentWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
@@ -67,14 +68,15 @@ protected:
 	UTPSHealthComponent *HealthComponent;
 
 	UFUNCTION()
-	void OnHealtChanged(UTPSHealthComponent *OwningHealtComp, float Health, float HealthDelta, const class UDamageType *DamageType, class AController *InstigatedBy, AActor *DamageCauser);
+	void OnHealtChanged(UTPSHealthComponent *OwningHealtComp, float Health, float HealthDelta,
+						const class UDamageType *DamageType, class AController *InstigatedBy, 
+						AActor *DamageCauser);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 	bool bisDeath;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 	int32 DeathPoseIndex;
-
 
 public:
 	// Called every frame
@@ -84,4 +86,6 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
+
+	
 };

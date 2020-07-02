@@ -11,6 +11,8 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "HordeGame/HordeGame.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
+
 
 // Sets default values
 ATPSWeapon::ATPSWeapon()
@@ -22,16 +24,28 @@ ATPSWeapon::ATPSWeapon()
 	BaseDamage = 20.0f;
 
 	RateofFire = 500;
+
+	SetReplicates(true);
+
+	NetUpdateFrequency = 66.0f;
+	MinNetUpdateFrequency = 33.0f;
 }
 
 void ATPSWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	TimeBetweenShots = 60 / RateofFire;
+
+	ActualDamage = BaseDamage;
 }
 
 void ATPSWeapon::Fire()
 {
+	if (!HasAuthority())
+	{
+		ServerFire();
+	}
+
 	AActor *MyOwner = GetOwner();
 	if (MyOwner)
 	{
@@ -50,41 +64,50 @@ void ATPSWeapon::Fire()
 		//Whether we should trace against complex collision
 		QueryParams.bTraceComplex = true;
 		FHitResult HitResult;
+		EPhysicalSurface SurfaceType = SurfaceType_Default;
 		if (GetWorld()->LineTraceSingleByChannel(HitResult, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 		{
-			TracerEndPoint = HitResult.ImpactPoint;
 			AActor *HitActor = HitResult.GetActor();
 
-			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
-			UParticleSystem *SelectedEffect = nullptr;
-			float ActualDamage = BaseDamage;
-			switch (SurfaceType)
+			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
+
+			if (SurfaceType == SURFACE_FLESHVULNERABLE)
 			{
-			case SURFACE_FLESHDEFAULT:
-				SelectedEffect = FleshImpactEffect;
-				break;
-
-			case SURFACE_FLESHVULNERABLE:
-				SelectedEffect = FleshImpactEffect;
-				ActualDamage *= 4.0f;
-				break;
-
-			default:
-				SelectedEffect = DefaultImpactEffect;
-				break;
+				ActualDamage = BaseDamage * 4;
 			}
+			PlayImpactEffects(SurfaceType, HitResult.ImpactPoint);
 			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, HitResult, MyOwner->GetInstigatorController(), this, DamageType);
-
-			if (SelectedEffect)
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
-			}
+			TracerEndPoint = HitResult.ImpactPoint;
 		}
 		//DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
 		PlayFireEffects(TracerEndPoint);
+		UE_LOG(LogTemp, Warning, TEXT("TracerEndPoint %d "), TracerEndPoint.Size())
+		TracerEndPoint = -1 * TracerEndPoint;
+
+		if (HasAuthority())
+		{
+			HitScanTracer.TraceTo = -1*TracerEndPoint;
+			HitScanTracer.SurfaceType = SurfaceType;
+		}
 
 		LastTimeFire = GetWorld()->GetTimeSeconds();
 	}
+}
+
+void ATPSWeapon::ServerFire_Implementation()
+{
+	Fire();
+}
+
+bool ATPSWeapon::ServerFire_Validate()
+{
+	return true;
+}
+
+void ATPSWeapon::OnRep_HitScanTrace()
+{
+	PlayFireEffects(HitScanTracer.TraceTo);
+	PlayImpactEffects(HitScanTracer.SurfaceType, HitScanTracer.TraceTo);
 }
 
 void ATPSWeapon::StartFire()
@@ -102,7 +125,7 @@ void ATPSWeapon::PlayFireEffects(FVector TracerEndPoint)
 {
 	if (MuzzleEffect)
 	{
-		UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, RootComponent, MuzzleSocketName);
+		UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
 	}
 
 	if (TracerEffect)
@@ -127,4 +150,38 @@ void ATPSWeapon::PlayFireEffects(FVector TracerEndPoint)
 			}
 		}
 	}
+}
+
+void ATPSWeapon::PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint)
+{
+	UParticleSystem *SelectedEffect = nullptr;
+	switch (SurfaceType)
+	{
+	case SURFACE_FLESHDEFAULT:
+		SelectedEffect = FleshImpactEffect;
+		break;
+
+	case SURFACE_FLESHVULNERABLE:
+		SelectedEffect = FleshImpactEffect;
+		break;
+
+	default:
+		SelectedEffect = DefaultImpactEffect;
+		break;
+	}
+
+	if (SelectedEffect)
+	{
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+		FVector ShotDirection = ImpactPoint - MuzzleLocation;
+		ShotDirection.Normalize();
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, ImpactPoint, ShotDirection.Rotation());
+	}
+}
+
+void ATPSWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ATPSWeapon, HitScanTracer, COND_SkipOwner);
 }
