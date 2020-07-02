@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "TPSHealthComponent.generated.h"
 
 /*Created OnHealthChanged custom event*/
@@ -22,7 +23,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadOnly, Category = "HealthComponet")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "HealthComponet")
 	float Health;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "HealthComponent")
