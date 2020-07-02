@@ -39,6 +39,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	UParticleSystem* ExplosionEffect;
 
+	UPROPERTY(ReplicatedUsing = OnRep_Explode)
 	bool bhasExploded;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
@@ -50,5 +51,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	float BaseDamage;
 
-
+	UFUNCTION()
+	void OnRep_Explode();
 };

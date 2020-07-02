@@ -9,6 +9,7 @@
 #include "HordeGame/HordeGame.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ATPSExplosiveBarrel::ATPSExplosiveBarrel()
@@ -17,6 +18,7 @@ ATPSExplosiveBarrel::ATPSExplosiveBarrel()
 	ExplosionImpulse = 10.0f;
 	BaseDamage = 150.0f;
 
+	
 	HealtComponent = CreateDefaultSubobject<UTPSHealthComponent>(TEXT("Health Component"));
 	HealtComponent->OnHealthChanged.AddDynamic(this, &ATPSExplosiveBarrel::OnHealtChanged);
 
@@ -32,20 +34,39 @@ ATPSExplosiveBarrel::ATPSExplosiveBarrel()
 	RadialForceComponent->Radius = ExplosionRadius;
 	RadialForceComponent->bIgnoreOwningActor = true;
 	RadialForceComponent->SetupAttachment(RootComponent);
+
+	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 void ATPSExplosiveBarrel::OnHealtChanged(UTPSHealthComponent* OwningHealtComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health <= 0 && !bhasExploded)
 	{
-		TArray <AActor*> IgnoredActors= {this};
-		bhasExploded = true;
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
-		FVector UpwardVector = FVector::UpVector * ExplosionImpulse;
-		MeshComp->AddImpulse(UpwardVector,NAME_None,true);
+
+		bhasExploded = true; //Replicate
+		OnRep_Explode();
+
+		FVector UpwardVector = FVector::UpVector * ExplosionImpulse; //Replicate
+		MeshComp->AddImpulse(UpwardVector, NAME_None, true);
 		RadialForceComponent->FireImpulse();
+		
+		TArray <AActor*> IgnoredActors = { this };
 		UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, this->GetInstigatorController(), false, COLLISION_WEAPON);
-		DrawDebugSphere(GetWorld(), this->GetActorLocation(), ExplosionRadius, 32, FColor::Red, false, 1.5f);
 	}
+}
+
+void ATPSExplosiveBarrel::OnRep_Explode()
+{
+	//We play cosmetic effects
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+
+	DrawDebugSphere(GetWorld(), this->GetActorLocation(), ExplosionRadius, 32, FColor::Red, false, 1.5f);
+}
+
+void ATPSExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ATPSExplosiveBarrel, bhasExploded);
 }
 
