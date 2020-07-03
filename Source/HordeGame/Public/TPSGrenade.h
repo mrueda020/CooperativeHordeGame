@@ -10,6 +10,7 @@ class UProjectileMovementComponent;
 class USphereComponent;
 class UDamageType;
 
+
 UCLASS()
 class HORDEGAME_API ATPSGrenade : public AActor
 {
@@ -27,7 +28,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	UProjectileMovementComponent *ProjectileMovement;
 
-	UPROPERTY(EditDefaultsOnly, Category = "FX")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FX")
 	UParticleSystem *ExplosionEffect;
 
 	FTimerHandle FuzeTimerHandle;
@@ -48,4 +49,7 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayExplosionEffects(FVector Location);
 };

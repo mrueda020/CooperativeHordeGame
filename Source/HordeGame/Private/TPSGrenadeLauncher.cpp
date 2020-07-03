@@ -5,7 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
-
+#include "Net/UnrealNetwork.h"
 
 void ATPSGrenadeLauncher::Fire()
 {	
@@ -23,13 +23,18 @@ void ATPSGrenadeLauncher::Fire()
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotator);
 
 		FVector TracerEndPoint = (EyeRotator.Vector()) * 10000;
-
-		FActorSpawnParameters ActorSpawnParams;
-		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
-		GetWorld()->SpawnActor<ATPSGrenade>(ProjectileClass, MuzzleLocation, EyeRotator, ActorSpawnParams);
-
 		PlayFireEffects(TracerEndPoint);
+
+		//We only spawn the projectile in the server 
+		if (HasAuthority())
+		{
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+			GetWorld()->SpawnActor<ATPSGrenade>(ProjectileClass, MuzzleLocation, EyeRotator, ActorSpawnParams);
+			TraceFrom = TracerEndPoint;
+		}
+		
 	}
 }
 
@@ -51,3 +56,15 @@ void ATPSGrenadeLauncher::EndFire()
 	
 }
 
+
+void ATPSGrenadeLauncher::OnRep_TraceFrom()
+{
+	PlayFireEffects(TraceFrom);
+}
+
+void ATPSGrenadeLauncher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ATPSGrenadeLauncher, TraceFrom, COND_SkipOwner);
+}

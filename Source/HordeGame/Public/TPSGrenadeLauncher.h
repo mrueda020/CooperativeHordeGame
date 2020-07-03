@@ -22,13 +22,19 @@ protected:
 
     UFUNCTION(Server, Reliable, WithValidation)
     void ServerFireGrenade();
+
+    UFUNCTION()
+    void OnRep_TraceFrom();
  
+    UPROPERTY(ReplicatedUsing = OnRep_TraceFrom)
+    FVector_NetQuantize TraceFrom;
 
 	/** Projectile class to spawn */
-    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+    UPROPERTY(Replicated, EditDefaultsOnly, Category = "Projectile")
     TSubclassOf<ATPSGrenade> ProjectileClass;
 	
-     
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
 
     virtual void StartFire() override;

@@ -9,6 +9,7 @@
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 #include "HordeGame/HordeGame.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ATPSGrenade::ATPSGrenade()
@@ -24,12 +25,13 @@ ATPSGrenade::ATPSGrenade()
 	ProjectileMovement->bShouldBounce = true;
 
 	// Die after 1 seconds by default
-	InitialLifeSpan = 1.0f;
-	MaxFuzeTime = 0.5f;
-	BaseDamage = 100.0f;
-	DamageRadius = 10.0f;
+	InitialLifeSpan = 1.5f;
+	MaxFuzeTime = 1.0f;
+	BaseDamage = 500.0f;
+	DamageRadius = 750.0f;
 
 	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 // Called when the game starts or when spawned
@@ -38,27 +40,28 @@ void ATPSGrenade::BeginPlay()
 	Super::BeginPlay();
 
 	if (ExplosionEffect)
-	{
+	{	
 		GetWorld()->GetTimerManager().SetTimer(FuzeTimerHandle, this, &ATPSGrenade::Explode, MaxFuzeTime);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("It should explode"))
 	}
 }
 
-void ATPSGrenade::Explode()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Explosion effect"));
-	TArray<AActor *> IgnoredActors = {this};
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, this->GetActorLocation());
-	UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), DamageRadius, DamageType, IgnoredActors, this, this->GetInstigatorController(),false, COLLISION_WEAPON);
-	DrawDebugSphere(GetWorld(), this->GetActorLocation(), DamageRadius, 32, FColor::Black, false, 1.5f);
-	Destroy();
-}
 
 // Called every frame
 void ATPSGrenade::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
+
+void ATPSGrenade::Explode()
+{
+	PlayExplosionEffects(GetActorLocation());
+	
+	TArray<AActor*> IgnoredActors = { this };
+	UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), DamageRadius, DamageType, IgnoredActors, this, this->GetInstigatorController(), false, COLLISION_WEAPON);
+	Destroy();
+}
+
+
+
+
