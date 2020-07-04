@@ -82,7 +82,7 @@ protected:
 	virtual void Fire();
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	virtual void ServerFire();
+	void ServerFire();
 
 	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
 	FHitScanTrace HitScanTracer;

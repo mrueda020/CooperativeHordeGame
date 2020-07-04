@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "TPSExplosiveBarrel.h"
 #include "HordeGame/Public/Components/TPSHealthComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -14,11 +13,10 @@
 // Sets default values
 ATPSExplosiveBarrel::ATPSExplosiveBarrel()
 {
-	ExplosionRadius = 20.0f;
-	ExplosionImpulse = 10.0f;
+	ExplosionRadius = 500.0f;
+	ExplosionImpulse = 500.0f;
 	BaseDamage = 150.0f;
 
-	
 	HealtComponent = CreateDefaultSubobject<UTPSHealthComponent>(TEXT("Health Component"));
 	HealtComponent->OnHealthChanged.AddDynamic(this, &ATPSExplosiveBarrel::OnHealtChanged);
 
@@ -39,7 +37,7 @@ ATPSExplosiveBarrel::ATPSExplosiveBarrel()
 	SetReplicateMovement(true);
 }
 
-void ATPSExplosiveBarrel::OnHealtChanged(UTPSHealthComponent* OwningHealtComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+void ATPSExplosiveBarrel::OnHealtChanged(UTPSHealthComponent *OwningHealtComp, float Health, float HealthDelta, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser)
 {
 	if (Health <= 0 && !bhasExploded)
 	{
@@ -50,8 +48,8 @@ void ATPSExplosiveBarrel::OnHealtChanged(UTPSHealthComponent* OwningHealtComp, f
 		FVector UpwardVector = FVector::UpVector * ExplosionImpulse; //Replicate
 		MeshComp->AddImpulse(UpwardVector, NAME_None, true);
 		RadialForceComponent->FireImpulse();
-		
-		TArray <AActor*> IgnoredActors = { this };
+
+		TArray<AActor *> IgnoredActors = {this};
 		UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, this->GetInstigatorController(), false, COLLISION_WEAPON);
 	}
 }
@@ -64,9 +62,8 @@ void ATPSExplosiveBarrel::OnRep_Explode()
 	DrawDebugSphere(GetWorld(), this->GetActorLocation(), ExplosionRadius, 32, FColor::Red, false, 1.5f);
 }
 
-void ATPSExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void ATPSExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ATPSExplosiveBarrel, bhasExploded);
 }
-

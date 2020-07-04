@@ -13,7 +13,6 @@
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
 
-
 // Sets default values
 ATPSWeapon::ATPSWeapon()
 {
@@ -81,12 +80,10 @@ void ATPSWeapon::Fire()
 		}
 		//DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
 		PlayFireEffects(TracerEndPoint);
-		UE_LOG(LogTemp, Warning, TEXT("TracerEndPoint %d "), TracerEndPoint.Size())
-		TracerEndPoint = -1 * TracerEndPoint;
 
 		if (HasAuthority())
 		{
-			HitScanTracer.TraceTo = -1*TracerEndPoint;
+			HitScanTracer.TraceTo = TracerEndPoint;
 			HitScanTracer.SurfaceType = SurfaceType;
 		}
 
