@@ -93,17 +93,17 @@ void ATPSCharacter::Tick(float DeltaTime)
 void ATPSCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
+	//PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
+	//PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
 
-	PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("Turn", this, &ATPSCharacter::AddControllerYawInput);
+	//PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
+	//PlayerInputComponent->BindAxis("Turn", this, &ATPSCharacter::AddControllerYawInput);
 
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ATPSCharacter::BeginCrouch);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ATPSCharacter::EndCrouch);
+	//PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ATPSCharacter::BeginCrouch);
+	//PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ATPSCharacter::EndCrouch);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ATPSCharacter::StopJumping);
+	//PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
+	//PlayerInputComponent->BindAction("Jump", IE_Released, this, &ATPSCharacter::StopJumping);
 
 	PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &ATPSCharacter::BeginZoom);
 	PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ATPSCharacter::EndZoom);

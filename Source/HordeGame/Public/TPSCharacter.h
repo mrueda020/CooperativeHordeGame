@@ -78,6 +78,7 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 	int32 DeathPoseIndex;
 
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
