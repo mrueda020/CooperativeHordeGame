@@ -18,7 +18,7 @@ ATPSExplosiveBarrel::ATPSExplosiveBarrel()
 	BaseDamage = 150.0f;
 
 	HealtComponent = CreateDefaultSubobject<UTPSHealthComponent>(TEXT("Health Component"));
-	HealtComponent->OnHealthChanged.AddDynamic(this, &ATPSExplosiveBarrel::OnHealtChanged);
+	HealtComponent->OnHealthChanged.AddDynamic(this, &ATPSExplosiveBarrel::OnHealthChanged);
 
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh Component"));
 	MeshComp->SetSimulatePhysics(true);
@@ -37,19 +37,19 @@ ATPSExplosiveBarrel::ATPSExplosiveBarrel()
 	SetReplicateMovement(true);
 }
 
-void ATPSExplosiveBarrel::OnHealtChanged(UTPSHealthComponent *OwningHealtComp, float Health, float HealthDelta, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser)
+void ATPSExplosiveBarrel::OnHealthChanged(UTPSHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health <= 0 && !bhasExploded)
 	{
-
+		
 		bhasExploded = true; //Replicate
 		OnRep_Explode();
 
-		FVector UpwardVector = FVector::UpVector * ExplosionImpulse; //Replicate
+		FVector UpwardVector = FVector::UpVector * ExplosionImpulse;
 		MeshComp->AddImpulse(UpwardVector, NAME_None, true);
 		RadialForceComponent->FireImpulse();
 
-		TArray<AActor *> IgnoredActors = {this};
+		TArray<AActor*> IgnoredActors = {this};
 		UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, this->GetInstigatorController(), false, COLLISION_WEAPON);
 	}
 }

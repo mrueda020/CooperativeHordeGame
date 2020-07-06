@@ -70,6 +70,8 @@ void ATPSWeapon::Fire()
 
 			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
 
+			ActualDamage = BaseDamage;
+
 			if (SurfaceType == SURFACE_FLESHVULNERABLE)
 			{
 				ActualDamage = BaseDamage * 4;

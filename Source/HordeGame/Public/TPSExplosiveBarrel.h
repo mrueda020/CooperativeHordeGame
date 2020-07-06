@@ -25,8 +25,8 @@ public:
 protected:
 
 	UFUNCTION()
-	void OnHealtChanged(UTPSHealthComponent* OwningHealtComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
-	
+	void OnHealthChanged(UTPSHealthComponent* OwningHealhtComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UTPSHealthComponent* HealtComponent;
 

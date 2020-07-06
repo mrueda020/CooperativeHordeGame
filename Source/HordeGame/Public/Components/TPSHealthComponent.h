@@ -8,7 +8,7 @@
 #include "TPSHealthComponent.generated.h"
 
 /*Created OnHealthChanged custom event*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, UTPSHealthComponent *, HealtComp, float, Health, float, HealthDelta, const class UDamageType *, DamageType, class AController *, InstigatedBy, AActor *, DamageCauser);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, UTPSHealthComponent *, HealthComp, float, Health, float, HealthDelta, const class UDamageType *, DamageType, class AController *, InstigatedBy, AActor *, DamageCauser);
 
 UCLASS(ClassGroup = (COOP), meta = (BlueprintSpawnableComponent))
 class HORDEGAME_API UTPSHealthComponent : public UActorComponent
