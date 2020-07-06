@@ -34,7 +34,7 @@ ATPSCharacter::ATPSCharacter()
 	CameraComponent->SetupAttachment(SpringArmComponent);
 
 	bIsAiming = false;
-	ZoomedFOV = 65.0f;
+	ZoomedFOV = 70.0f;
 	FOVInterpSpeed = 25.0f;
 
 	WeaponSocketName = "Weapon Socket";
@@ -48,7 +48,7 @@ void ATPSCharacter::BeginPlay()
 	srand(time(NULL));
 
 	DefaultFOV = CameraComponent->FieldOfView;
-	HealthComponent->OnHealthChanged.AddDynamic(this, &ATPSCharacter::OnHealtChanged);
+	HealthComponent->OnHealthChanged.AddDynamic(this, &ATPSCharacter::OnHealthChanged);
 
 	if (HasAuthority())
 	{
@@ -63,12 +63,11 @@ void ATPSCharacter::BeginPlay()
 	}
 }
 
-void ATPSCharacter::OnHealtChanged(UTPSHealthComponent *OwningHealtComp, float Health, float HealthDelta, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser)
+void ATPSCharacter::OnHealthChanged(UTPSHealthComponent *OwningHealthComp, float Health, float HealthDelta, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser)
 {
 	if (Health <= 0 && !bisDeath)
 	{
 		DeathPoseIndex = rand() % DeathAnimPoses;
-		UE_LOG(LogTemp, Warning, TEXT("DeathPose index %d"), DeathPoseIndex);
 		bisDeath = true;
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -87,6 +86,18 @@ void ATPSCharacter::Tick(float DeltaTime)
 	float NewFOV = FMath::FInterpTo(CameraComponent->FieldOfView, TargetFOV, DeltaTime, FOVInterpSpeed);
 
 	CameraComponent->SetFieldOfView(NewFOV);
+
+	if (!IsLocallyControlled())
+	{ //RemoteViewPitch is a replicated property, so that you can see where remote clients are looking
+		FRotator ClientRotation = CameraComponent->GetRelativeRotation();
+		//We multiply by 360.0f and divde by 255.0f because RemoteViewPitch is compressed to 1 byte
+		float ReferencePitch = RemoteViewPitch * 360.0f / 255.0f;
+		Pitch = ReferencePitch >= 269 && ReferencePitch <= 359 ? FMath::Clamp((-359 + ReferencePitch), -90.0f, 0.0f) : ReferencePitch;
+		//We set the new rotation
+		ClientRotation.Pitch = RemoteViewPitch;
+		CameraComponent->SetRelativeRotation(ClientRotation);
+	}
+	
 }
 
 // Called to bind functionality to input

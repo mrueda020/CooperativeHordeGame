@@ -68,7 +68,7 @@ protected:
 	UTPSHealthComponent *HealthComponent;
 
 	UFUNCTION()
-	void OnHealtChanged(UTPSHealthComponent *OwningHealtComp, float Health, float HealthDelta,
+	void OnHealthChanged(UTPSHealthComponent *OwningHealthComp, float Health, float HealthDelta,
 						const class UDamageType *DamageType, class AController *InstigatedBy, 
 						AActor *DamageCauser);
 
@@ -78,6 +78,11 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 	int32 DeathPoseIndex;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Player")
+	float Pitch;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Player")
+	float Yaw;
 
 public:
 	// Called every frame
