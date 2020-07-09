@@ -1,0 +1,193 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "HordeGame/Public/AI/TPSBotTracker.h"
+#include "HordeGame/Public/Components/TPSHealthComponent.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
+#include "DrawDebugHelpers.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/SphereComponent.h"
+#include "TPSCharacter.h"
+#include "PhysicsEngine/RadialForceComponent.h"
+#include "Sound/SoundCue.h"
+
+// Sets default values
+ATPSBotTracker::ATPSBotTracker()
+{
+	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	MeshComponent->SetSimulatePhysics(true);
+	MeshComponent->SetCanEverAffectNavigation(false);
+	RootComponent = MeshComponent;
+
+	HealthComponent = CreateDefaultSubobject<UTPSHealthComponent>(TEXT("HealthComponent"));
+	HealthComponent->OnHealthChanged.AddDynamic(this, &ATPSBotTracker::HandleTakeAnyDamage);
+
+	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+	SphereComponent->SetSphereRadius(350);
+	SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	SphereComponent->AttachTo(RootComponent);
+
+	ForceMovement = 1000.0f;
+	bUseAccelChange = true;
+	RequiredDistanceToNextPathPoint = 1000.0f;
+
+	BaseDamage = 45.0f;
+	DamageRadius = 250.0f;
+	bExploded = false;
+
+	RadialForceComponent = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForce Componet"));
+	RadialForceComponent->bImpulseVelChange = true;
+	RadialForceComponent->bAutoActivate = false;
+	RadialForceComponent->Radius = DamageRadius;
+	RadialForceComponent->bIgnoreOwningActor = true;
+	RadialForceComponent->SetupAttachment(RootComponent);
+
+	ExplosionImpulse = 1000.0f;
+
+	LifeSpanAfterExploded = 1.5f;
+}
+
+
+// Called when the game starts or when spawned
+void ATPSBotTracker::BeginPlay()
+{
+	Super::BeginPlay();
+	if (PlayerObjectiveClass)
+	{
+		TArray<AActor*> ReturnedActors;
+		UGameplayStatics::GetAllActorsOfClass(this, PlayerObjectiveClass, ReturnedActors);
+
+		if (ReturnedActors.Num() > 0)
+		{
+			ActorToFollow = ReturnedActors[0];
+		}
+
+		NextPathPoint = GetNextPathPoint();
+	}
+
+}
+
+FVector ATPSBotTracker::GetNextPathPoint()
+{
+	if (ActorToFollow)
+	{
+		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(GetWorld(), GetActorLocation(), ActorToFollow);
+		if (NavPath->PathPoints.Num() > 1)
+		{
+			return NavPath->PathPoints[1];
+		}
+
+	}
+
+	return GetActorLocation();
+}
+
+void ATPSBotTracker::ChaseActor()
+{
+	if (ActorToFollow)
+	{
+		float DistanceToNextPathPoint = (GetActorLocation() - NextPathPoint).Size();
+
+		if (DistanceToNextPathPoint <= RequiredDistanceToNextPathPoint)
+		{
+			NextPathPoint = GetNextPathPoint();
+		}
+
+		else
+		{
+			FVector ForceDirection = NextPathPoint - GetActorLocation();
+			ForceDirection.Normalize();
+			ForceDirection *= ForceMovement;
+			MeshComponent->AddForce(ForceDirection, NAME_None, bUseAccelChange);
+			DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(), GetActorLocation() + ForceDirection, 32, FColor::Black, false, 0.0f, 0);
+		}
+
+		DrawDebugSphere(GetWorld(), NextPathPoint, 35.0f, 32, FColor::Red, false, 1.0f);
+
+	}
+}
+
+void ATPSBotTracker::HandleTakeAnyDamage(UTPSHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+
+
+	if (MaterialInstance == nullptr)
+	{
+		MaterialInstance = MeshComponent->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComponent->GetMaterial(0));
+	}
+
+	if (MaterialInstance)
+	{
+		MaterialInstance->SetScalarParameterValue("LastTimeDamageTaken", GetWorld()->GetTimeSeconds());
+	}
+
+	if (Health <= 0.0f && !bExploded)
+	{
+		Explode();
+	}
+
+}
+
+
+void ATPSBotTracker::Explode()
+{	
+	
+	bExploded = true;
+	if (ExplosionEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+	}
+	TArray<AActor*> IgnoredActors = { this };
+	UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), DamageRadius, nullptr, IgnoredActors, this, this->GetInstigatorController(), true);
+	DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 32, FColor::Green, false, 1.0f);
+
+	FVector ImpulseVector = FVector::ForwardVector * ExplosionImpulse;
+
+	MeshComponent->AddImpulse(ImpulseVector, NAME_None, true);
+	RadialForceComponent->FireImpulse();
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocation());
+	//Destroy();
+	SetLifeSpan(LifeSpanAfterExploded);
+}
+
+
+void ATPSBotTracker::InflictSelfDamage()
+{
+	UGameplayStatics::ApplyDamage(this, 15, GetInstigatorController(), this, nullptr);
+}
+
+// Called every frame
+void ATPSBotTracker::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	ChaseActor();
+}
+
+
+
+void ATPSBotTracker::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	if(bExploded)
+	{
+		return;
+	}
+	if (!bStartedSelfDestruction)
+	{
+		ATPSCharacter* PlayerPawn = Cast<ATPSCharacter>(OtherActor);
+		if (PlayerPawn)
+		{
+			GetWorld()->GetTimerManager().SetTimer(FuzeTimerHandle, this, &ATPSBotTracker::InflictSelfDamage, 0.05f, true, 0.0f);
+			bStartedSelfDestruction = true;
+			UGameplayStatics::SpawnSoundAttached(TriggerExplosionSound, RootComponent);
+		}
+	}
+}
+
