@@ -14,6 +14,8 @@
 #include "TPSCharacter.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Sound/SoundCue.h"
+#include "Components/AudioComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ATPSBotTracker::ATPSBotTracker()
@@ -33,7 +35,10 @@ ATPSBotTracker::ATPSBotTracker()
 	SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-	SphereComponent->AttachTo(RootComponent);
+	SphereComponent->SetupAttachment(RootComponent);
+
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	//AudioComponent->AttachTo(RootComponent);
 
 	ForceMovement = 1000.0f;
 	bUseAccelChange = true;
@@ -53,6 +58,11 @@ ATPSBotTracker::ATPSBotTracker()
 	ExplosionImpulse = 1000.0f;
 
 	LifeSpanAfterExploded = 1.5f;
+
+	MinDistanceBetweenBots = 560.0f;
+	DamageMultiplier = 1;
+	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 
@@ -60,19 +70,22 @@ ATPSBotTracker::ATPSBotTracker()
 void ATPSBotTracker::BeginPlay()
 {
 	Super::BeginPlay();
-	if (PlayerObjectiveClass)
+	if (HasAuthority())
 	{
-		TArray<AActor*> ReturnedActors;
-		UGameplayStatics::GetAllActorsOfClass(this, PlayerObjectiveClass, ReturnedActors);
-
-		if (ReturnedActors.Num() > 0)
+		if (PlayerObjectiveClass)
 		{
-			ActorToFollow = ReturnedActors[0];
+			TArray<AActor*> ReturnedActors;
+			UGameplayStatics::GetAllActorsOfClass(this, PlayerObjectiveClass, ReturnedActors);
+
+			if (ReturnedActors.Num() > 0)
+			{
+				ActorToFollow = ReturnedActors[0];
+			}
+
+			NextPathPoint = GetNextPathPoint();
 		}
 
-		NextPathPoint = GetNextPathPoint();
 	}
-
 }
 
 FVector ATPSBotTracker::GetNextPathPoint()
@@ -145,17 +158,21 @@ void ATPSBotTracker::Explode()
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
 	}
-	TArray<AActor*> IgnoredActors = { this };
-	UGameplayStatics::ApplyRadialDamage(GetWorld(), BaseDamage, GetActorLocation(), DamageRadius, nullptr, IgnoredActors, this, this->GetInstigatorController(), true);
-	DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 32, FColor::Green, false, 1.0f);
-
-	FVector ImpulseVector = FVector::ForwardVector * ExplosionImpulse;
-
-	MeshComponent->AddImpulse(ImpulseVector, NAME_None, true);
-	RadialForceComponent->FireImpulse();
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocation());
-	//Destroy();
-	SetLifeSpan(LifeSpanAfterExploded);
+
+	if (HasAuthority())
+	{
+		TArray<AActor*> IgnoredActors = { this };		
+		float ActualDamage = BaseDamage;
+		ActualDamage *= DamageMultiplier;
+		UGameplayStatics::ApplyRadialDamage(GetWorld(), ActualDamage, GetActorLocation(), DamageRadius, nullptr, IgnoredActors, this, this->GetInstigatorController(), true);
+		DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 32, FColor::Green, false, 1.0f);
+		FVector ImpulseVector = FVector::ForwardVector * ExplosionImpulse;
+		MeshComponent->AddImpulse(ImpulseVector, NAME_None, true);
+		RadialForceComponent->FireImpulse();
+		SetLifeSpan(LifeSpanAfterExploded);
+	}
+	
 }
 
 
@@ -168,13 +185,73 @@ void ATPSBotTracker::InflictSelfDamage()
 void ATPSBotTracker::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	ChaseActor();
+	if (HasAuthority())
+	{	
+		PlayRollingSound();
+		ChaseActor();
+		CheckNearBots();
+	}
+}
+
+void ATPSBotTracker::PlayRollingSound()
+{
+	float Velocity = GetVelocity().Size();
+	float AudioMultiplier = MapRangedClamped(Velocity, 10, 1000, 1, 3);
+	//UE_LOG(LogTemp, Warning, TEXT("Velocity : %f  ,  Volume %f"), Velocity, AudioMultiplier);
+	AudioComponent->SetVolumeMultiplier(AudioMultiplier);
+}
+
+void ATPSBotTracker::CheckNearBots()
+{
+	float PowerLevel = 1;
+	TArray<AActor*> ReturnedActors;
+	UGameplayStatics::GetAllActorsOfClass(this, this->GetClass(), ReturnedActors);
+	if (ReturnedActors.Num() > 1)
+	{
+		for (int32 i = 0; i < ReturnedActors.Num(); i++)
+		{
+			float Distance = (GetActorLocation() - ReturnedActors[i]->GetActorLocation()).Size();
+
+			if (Distance < MinDistanceBetweenBots && Distance != 0)
+			{
+				PowerLevel += 1;
+			}
+			else
+			{
+				PowerLevel = PowerLevel <= 0 ? 1 : PowerLevel--;
+			}
+
+
+		}
+
+	}
+
+	const int32 MaxPowerLevel = 4;
+
+	DamageMultiplier = PowerLevel < 1 ? 1 : PowerLevel < MaxPowerLevel ? PowerLevel : MaxPowerLevel;
+	
+	Alpha = PowerLevel == 1 ? 0 : PowerLevel / float(MaxPowerLevel);
+
+
+	if(HasAuthority())
+	{
+		
+		if (MaterialInstance == nullptr)
+		{
+			MaterialInstance = MeshComponent->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComponent->GetMaterial(0));
+		}
+
+		if (MaterialInstance)
+		{
+			MaterialInstance->SetScalarParameterValue("PowerLevelAlpha", Alpha);
+		}
+	}
+	//UE_LOG(LogTemp, Warning, TEXT("Damage %f"), DamageMultiplier)
 }
 
 
-
 void ATPSBotTracker::NotifyActorBeginOverlap(AActor* OtherActor)
-{
+{	
 	if(bExploded)
 	{
 		return;
@@ -183,11 +260,30 @@ void ATPSBotTracker::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		ATPSCharacter* PlayerPawn = Cast<ATPSCharacter>(OtherActor);
 		if (PlayerPawn)
-		{
-			GetWorld()->GetTimerManager().SetTimer(FuzeTimerHandle, this, &ATPSBotTracker::InflictSelfDamage, 0.05f, true, 0.0f);
+		{	
+			if (HasAuthority())
+			{
+				GetWorld()->GetTimerManager().SetTimer(FuzeTimerHandle, this, &ATPSBotTracker::InflictSelfDamage, 0.05f, true, 0.0f);
+			}
 			bStartedSelfDestruction = true;
 			UGameplayStatics::SpawnSoundAttached(TriggerExplosionSound, RootComponent);
 		}
 	}
 }
 
+float ATPSBotTracker::MapRangedClamped(float value, float inRangeA, float inRangeB, float outRangeA, float outRangeB)
+{
+	if (outRangeA == outRangeB) return outRangeA;
+	if (inRangeA == inRangeB) UE_LOG(LogTemp, Warning, TEXT("inRangeA == inRangeB which will produce one to many mapping"));
+	float inPercentage = (value - inRangeA) / (inRangeB - inRangeA);
+	if (inPercentage < 0.0f) return outRangeA;
+	if (inPercentage > 1.0f) return outRangeB;
+	return outRangeA + inPercentage * (outRangeB - outRangeA);
+}
+
+void ATPSBotTracker::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATPSBotTracker, Alpha);
+}

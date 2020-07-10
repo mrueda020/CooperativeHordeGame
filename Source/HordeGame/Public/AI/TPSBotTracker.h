@@ -12,6 +12,7 @@ class UMaterialInstanceDynamic;
 class USphereComponent;
 class URadialForceComponent;
 class USoundCue;
+class UAudioComponent;
 
 UCLASS()
 class HORDEGAME_API ATPSBotTracker : public APawn
@@ -39,6 +40,9 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	USphereComponent* SphereComponent;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
+	UAudioComponent* AudioComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "BotTracker")
 	TSubclassOf<AActor> PlayerObjectiveClass;
@@ -88,8 +92,7 @@ protected:
 
 	UFUNCTION()
 		void HandleTakeAnyDamage(UTPSHealthComponent* OwningHealthComp, float Health, float HealthDelta,
-			const class UDamageType* DamageType, class AController* InstigatedBy,
-			AActor* DamageCauser);
+			const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	FTimerHandle FuzeTimerHandle;
 
@@ -97,10 +100,24 @@ protected:
 
 	void InflictSelfDamage();
 
+	float MapRangedClamped(float value, float inRangeA, float inRangeB, float outRangeA, float outRangeB);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float MinDistanceBetweenBots;
+
+	void CheckNearBots();
+
+	void PlayRollingSound();
+
+	float DamageMultiplier;
+	
+	UPROPERTY(Replicated)
+	float Alpha;
 
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	
 	/**
  *	Event when this actor overlaps another actor, for example a player walking into a trigger.
  *	For events when objects have a blocking collision, for example a player hitting a wall, see 'Hit' events.

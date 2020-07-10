@@ -27,6 +27,12 @@ void UTPSHealthComponent::BeginPlay()
 	Health = DefaultHealth;
 }
 
+void UTPSHealthComponent::OnRep_Health(float PreviousHealth)
+{
+	float Damage = Health - PreviousHealth;
+	OnHealthChanged.Broadcast(this, Health, Damage, nullptr, nullptr, nullptr);
+}
+
 void UTPSHealthComponent::HandleTakeAnyDamage(AActor *DamagedActor, float Damage, const UDamageType *DamageType, AController *InstigatedBy, AActor *DamageCauser)
 {
 	
