@@ -1,0 +1,10 @@
+{
+	"files.exclude": {
+		"C:/Users/Equipo/3D Objects/HordeGame/.git": true,
+		"C:/Users/Equipo/3D Objects/HordeGame/.vscode": true,
+		"C:/Users/Equipo/3D Objects/HordeGame/Content": true,
+		"C:/Users/Equipo/3D Objects/HordeGame/DerivedDataCache": true,
+		"C:/Users/Equipo/3D Objects/HordeGame/Intermediate": true,
+		"C:/Users/Equipo/3D Objects/HordeGame/Saved": true
+	}
+}

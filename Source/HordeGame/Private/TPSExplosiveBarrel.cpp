@@ -18,6 +18,7 @@ ATPSExplosiveBarrel::ATPSExplosiveBarrel()
 	BaseDamage = 150.0f;
 
 	HealtComponent = CreateDefaultSubobject<UTPSHealthComponent>(TEXT("Health Component"));
+	//Syncronise the TPSHealthComponent function HandleTakeAnyDamage with OnHealthChanged
 	HealtComponent->OnHealthChanged.AddDynamic(this, &ATPSExplosiveBarrel::OnHealthChanged);
 
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh Component"));

@@ -41,7 +41,7 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	USphereComponent* SphereComponent;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Components")
 	UAudioComponent* AudioComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "BotTracker")
